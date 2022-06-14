@@ -41,7 +41,8 @@ def save_businesses():
         business.is_open = True if bdata['is_open'] == "True" else False
         business.save()
 
-        save_categories(bdata['business_id'], bdata['categories'])
+        if bdata['categories'] is not None:
+            save_categories(bdata['business_id'], bdata['categories'].split(", "))
 
 
 def save_categories(business_id, cat_jarray):
