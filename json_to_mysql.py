@@ -15,7 +15,7 @@ import sys
 def iterate_file(model_name, shortcircuit=True, status_frequency=500):
     i = 0
     jsonfilename = "yelp_academic_dataset_%s.json" % model_name.lower()
-    with open(jsonfilename) as jfile:
+    with open(jsonfilename, "r") as jfile:
         for line in jfile:
             i += 1
             yield json.loads(line)
@@ -96,18 +96,22 @@ def save_users():
         user.compliment_photos = int(udata['compliment_photos'])
         
         user.save()
-        
-        save_friends(udata['user_id'], udata['friends'].split(", "))
 
 
-def save_friends(user_id, cat_jarray):
-    if cat_jarray is None:
-        return
-    for friend_id in cat_jarray:
-        friend = Friend()
-        friend.user_id = user_id
-        friend.friend_id = friend_id
-        friend.save()
+def save_friends():
+    for udata in iterate_file("user", shortcircuit=False):
+        user_id = udata['user_id']
+
+        friends = udata['friends']
+        if friends is None or len(friends) == 0:
+            return
+        friends = friends.split(", ")
+
+        for friend_id in friends:
+            friend = Friend()
+            friend.user_id = user_id
+            friend.friend_id = friend_id
+            friend.save()
 
 
 def save_checkins():
@@ -164,7 +168,7 @@ if __name__ == "__main__":
 
     table = sys.argv[1]
     assert table is not None
-    assert table in ["reset", "business", "user", "review"]
+    assert table in ["reset", "business", "user", "friend", "review"]
 
     if table == "reset":
         reset_database()
@@ -172,6 +176,8 @@ if __name__ == "__main__":
         save_businesses()
     elif table == "user":
         save_users()
+    elif table == "friend":
+        save_friends()
     elif table == "review":
         save_reviews()
     
